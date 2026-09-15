@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MBTI 性格测评程序 — 交互原型</title>
+<style>
+/* ==================== 原型全局样式 ==================== */
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:"Microsoft YaHei","PingFang SC","Helvetica Neue",Arial,sans-serif;background:#eef0f4;color:#333;line-height:1.6;}
+
+/* 顶部工具栏 */
+.toolbar{position:fixed;top:0;left:0;right:0;height:52px;background:#1a252f;display:flex;align-items:center;padding:0 24px;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,0.15);}
+.toolbar-title{color:#fff;font-size:16px;font-weight:bold;margin-right:auto;}
+.toolbar-tag{background:#2980b9;color:#fff;font-size:11px;padding:2px 10px;border-radius:10px;margin-left:8px;}
+.screen-tabs{display:flex;gap:4px;}
+.tab-btn{background:transparent;color:#a0b0c0;border:1px solid #3a4a5a;border-radius:6px;padding:6px 18px;font-size:13px;cursor:pointer;transition:all 0.2s;}
+.tab-btn:hover{background:#2c3e50;color:#fff;}
+.tab-btn.active{background:#3498db;color:#fff;border-color:#3498db;}
+
+/* 注释标注 */
+.annotation{position:absolute;background:#fff3cd;border:1px dashed #ffc107;border-radius:6px;padding:6px 12px;font-size:11px;color:#856404;line-height:1.4;max-width:200px;z-index:50;box-shadow:2px 2px 6px rgba(0,0,0,0.08);}
+.annotation::before{content:'';position:absolute;background:#ffc107;}
+.annotation.left::before{left:-20px;top:50%;width:20px;height:1px;}
+.annotation.right::before{right:-20px;top:50%;width:20px;height:1px;}
+.annotation.top::before{top:-20px;left:50%;width:1px;height:20px;}
+.annotation .label{font-weight:bold;color:#d9534f;display:block;margin-bottom:2px;}
+
+/* 画布区域 */
+.canvas-area{margin-top:52px;padding:40px 20px;min-height:calc(100vh - 52px);display:flex;justify-content:center;align-items:flex-start;}
+.screen-container{display:none;width:100%;max-width:600px;}
+.screen-container.active{display:block;position:relative;}
+
+/* 画布外框（模拟设备） */
+.device-frame{background:#fff;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,0.1);overflow:hidden;border:3px solid #d0d8e0;position:relative;}
+
+/* ==================== 欢迎页样式 ==================== */
+.intro-card{padding:40px 35px;}
+.intro-title{font-size:28px;text-align:center;color:#1a5276;margin-bottom:10px;}
+.intro-subtitle{text-align:center;color:#888;font-size:14px;margin-bottom:30px;}
+.intro-text{font-size:15px;color:#666;line-height:1.8;margin-bottom:25px;text-align:justify;}
+.intro-info{background:#f8f9fa;border-radius:10px;padding:20px;margin-bottom:25px;}
+.intro-info p{font-size:13px;color:#888;line-height:1.7;}
+.intro-info strong{color:#555;}
+
+/* ==================== 测评页样式 ==================== */
+.quiz-card{padding:35px 35px 30px;}
+.progress-text{font-size:13px;color:#999;text-align:center;margin-bottom:8px;}
+.progress-bar{width:100%;height:6px;background:#e8e8e8;border-radius:3px;margin-bottom:25px;overflow:hidden;}
+.progress-fill{height:100%;background:#3498db;border-radius:3px;transition:width 0.3s;}
+.question-text{font-size:18px;font-weight:bold;margin-bottom:25px;color:#2c3e50;line-height:1.5;}
+.option-btn{display:block;width:100%;text-align:left;background:#f8f9fa;border:2px solid #e8e8e8;border-radius:10px;padding:18px 22px;margin-bottom:14px;font-size:15px;color:#444;cursor:pointer;transition:all 0.15s;line-height:1.5;}
+.option-btn:hover{border-color:#3498db;background:#ebf5fb;}
+.option-btn.selected{border-color:#2980b9;background:#d4eef9;}
+
+/* ==================== 结果页样式 ==================== */
+.result-card{padding:40px 35px;}
+.result-label-top{text-align:center;color:#888;font-size:16px;margin-bottom:10px;}
+.result-type{font-size:48px;font-weight:bold;text-align:center;color:#1a5276;margin:10px 0 5px;}
+.result-label{font-size:16px;text-align:center;color:#888;margin-bottom:25px;}
+.result-dimensions{margin-bottom:30px;}
+.dimension-row{display:flex;align-items:center;margin-bottom:18px;}
+.dimension-label{width:80px;font-size:15px;font-weight:bold;color:#555;text-align:center;}
+.dimension-bar{flex:1;height:30px;background:#ecf0f1;border-radius:15px;overflow:hidden;display:flex;}
+.dimension-side-a{height:100%;display:flex;align-items:center;justify-content:center;font-size:13px;color:#fff;font-weight:bold;transition:width 0.8s ease;}
+.dimension-side-b{height:100%;display:flex;align-items:center;justify-content:center;font-size:13px;color:#fff;font-weight:bold;transition:width 0.8s ease;}
+.dimension-percent{width:60px;font-size:14px;text-align:center;color:#666;}
+.e-side{background:#e67e22;} .i-side{background:#3498db;}
+.s-side{background:#27ae60;} .n-side{background:#8e44ad;}
+.t-side{background:#c0392b;} .f-side{background:#e84393;}
+.j-side{background:#d4a017;} .p-side{background:#16a085;}
+.result-desc{background:#f8f9fa;border-radius:10px;padding:25px;margin-bottom:20px;}
+.result-desc h3{font-size:16px;color:#1a5276;margin-bottom:12px;}
+.result-desc p{font-size:14px;color:#555;line-height:1.8;}
+.result-traits{margin-bottom:20px;}
+.result-traits h3{font-size:16px;color:#1a5276;margin-bottom:12px;}
+.trait-item{display:inline-block;background:#ebf5fb;border:1px solid #bee5f0;border-radius:20px;padding:6px 16px;margin:4px;font-size:13px;color:#2980b9;}
+
+/* 通用按钮 */
+.btn{display:block;width:100%;padding:14px;border:none;border-radius:8px;font-size:16px;cursor:pointer;transition:all 0.2s;}
+.btn-primary{background:#3498db;color:#fff;}
+.btn-primary:hover{background:#2980b9;}
+
+/* 流程导航 */
+.flow-nav{display:flex;justify-content:center;gap:20px;margin-top:30px;align-items:center;}
+.flow-arrow{color:#999;font-size:20px;}
+.flow-step{text-align:center;}
+.flow-step-circle{width:40px;height:40px;border-radius:50%;background:#3498db;color:#fff;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:bold;margin:0 auto 6px;}
+.flow-step-circle.done{background:#27ae60;}
+.flow-step-label{font-size:12px;color:#888;}
+.flow-step.active .flow-step-circle{box-shadow:0 0 0 3px rgba(52,152,219,0.3);}
+
+.hidden{display:none;}
+
+/* 设计规格面板 */
+.spec-panel{background:#1e2a36;color:#a0b0c0;border-radius:8px;padding:16px 20px;margin-top:20px;font-size:12px;line-height:1.8;}
+.spec-panel h4{color:#5dade2;font-size:13px;margin-bottom:8px;}
+.spec-panel code{color:#58d68d;background:#2c3e50;padding:1px 6px;border-radius:3px;}
+</style>
+</head>
+<body>
+
+<!-- ==================== 顶部工具栏 ==================== -->
+<div class="toolbar">
+<div class="toolbar-title">MBTI 性格测评程序 <span class="toolbar-tag">交互原型 v1.0</span></div>
+<div class="screen-tabs">
+<button class="tab-btn active" onclick="showScreen('intro',this)">1. 欢迎页</button>
+<button class="tab-btn" onclick="showScreen('quiz',this)">2. 测评页</button>
+<button class="tab-btn" onclick="showScreen('result',this)">3. 结果页</button>
+<button class="tab-btn" onclick="showScreen('flow',this)">4. 流程总览</button>
+</div>
+</div>
+
+<!-- ==================== 画布区域 ==================== -->
+<div class="canvas-area">
+
+<!-- ===== 欢迎页 ===== -->
+<div id="screen-intro" class="screen-container active">
+<div class="device-frame">
+<div class="intro-card">
+<h1 class="intro-title">MBTI 性格测评</h1>
+<p class="intro-subtitle">发现你的性格类型</p>
+<p class="intro-text">
+你好！欢迎参加 MBTI 性格测评。MBTI 全称"迈尔斯-布里格斯类型指标"，通过四个维度来描述人的性格偏好。这个测评没有"对"与"错"的答案，请根据你<strong>最真实的自己</strong>来选择，而不是选择"你觉得应该怎样"。
+</p>
+<div class="intro-info">
+<p><strong>测评说明：</strong></p>
+<p>共 32 道题目，大约需要 10-15 分钟。每道题有两个选项，请选择更符合你平时状态的描述。根据第一直觉选择即可，不需要过多思考。</p>
+<p style="margin-top:8px;"><strong>四个维度：</strong></p>
+<p>E（外向）/ I（内向）—— 你从哪里获取能量</p>
+<p>S（感觉）/ N（直觉）—— 你如何获取信息</p>
+<p>T（思考）/ F（情感）—— 你如何做决定</p>
+<p>J（判断）/ P（感知）—— 你如何安排生活</p>
+</div>
+<button class="btn btn-primary" onclick="showScreen('quiz',document.querySelectorAll('.tab-btn')[1])">开始测评</button>
+</div>
+</div>
+<!-- 注释 -->
+<div class="annotation right" style="top:60px;right:-220px;">
+<span class="label">[A-01] 页面标题</span>
+28px / #1a5276 / 居中<br>主品牌色，第一视觉焦点
+</div>
+<div class="annotation right" style="top:200px;right:-220px;">
+<span class="label">[A-02] 引导文案</span>
+15px / #666 / 左对齐<br>通俗语言，无心理学术语<br>面向中学生理解力
+</div>
+<div class="annotation right" style="top:380px;right:-220px;">
+<span class="label">[A-03] 信息卡片</span>
+背景 #f8f9fa / 圆角 10px<br>测评说明 + 四维度速览<br>帮助学生建立基本认知
+</div>
+<div class="annotation right" style="top:540px;right:-220px;">
+<span class="label">[A-04] CTA 按钮</span>
+#3498db / 全宽 / 圆角 8px<br>hover 变深至 #2980b9<br>点击进入测评页
+</div>
+</div>
+
+<!-- ===== 测评页 ===== -->
+<div id="screen-quiz" class="screen-container">
+<div class="device-frame">
+<div class="quiz-card">
+<div id="proto-progress-text" class="progress-text">第 3 题 / 共 32 题</div>
+<div class="progress-bar"><div id="proto-progress-fill" class="progress-fill" style="width:9.3%"></div></div>
+<p id="proto-question-text" class="question-text">课间休息时，你更倾向于：</p>
+<div id="proto-options">
+<button class="option-btn" onclick="protoSelect(this,'E')">A. 去走廊和同学聊天，觉得和人交流很放松</button>
+<button class="option-btn" onclick="protoSelect(this,'I')">B. 自己在座位上安静待着，或者看看书</button>
+</div>
+</div>
+</div>
+<!-- 注释 -->
+<div class="annotation right" style="top:30px;right:-220px;">
+<span class="label">[B-01] 进度指示</span>
+文字 + 进度条双指示<br>文字："第 N 题 / 共 32 题"<br>进度条随题号增长
+</div>
+<div class="annotation right" style="top:140px;right:-220px;">
+<span class="label">[B-02] 题目文本</span>
+18px / bold / #2c3e50<br>情境化描述，中学生场景<br>最多两行，避免过长
+</div>
+<div class="annotation right" style="top:240px;right:-220px;">
+<span class="label">[B-03] 选项 A/B</span>
+默认：#f8f9fa / 边框 #e8e8e8<br>hover：边框 #3498db / 背景 #ebf5fb<br>选中：边框 #2980b9 / 背景 #d4eef9
+</div>
+<div class="annotation right" style="top:380px;right:-220px;">
+<span class="label">[B-04] 交互逻辑</span>
+点击选项 → 高亮选中 →<br>延迟 200ms → 跳转下一题<br>最后一题完成后进入结果页
+</div>
+</div>
+
+<!-- ===== 结果页 ===== -->
+<div id="screen-result" class="screen-container">
+<div class="device-frame">
+<div class="result-card">
+<p class="result-label-top">你的性格类型是</p>
+<div class="result-type">ENFP</div>
+<p class="result-label">竞选者</p>
+<div class="result-dimensions">
+<div class="dimension-row">
+<div class="dimension-label">E / I</div>
+<div class="dimension-bar">
+<div class="dimension-side-a e-side" style="width:62%">62%</div>
+<div class="dimension-side-b i-side" style="width:38%">38%</div>
+</div>
+<div class="dimension-percent">外向/内向</div>
+</div>
+<div class="dimension-row">
+<div class="dimension-label">S / N</div>
+<div class="dimension-bar">
+<div class="dimension-side-a s-side" style="width:25%">25%</div>
+<div class="dimension-side-b n-side" style="width:75%">75%</div>
+</div>
+<div class="dimension-percent">感觉/直觉</div>
+</div>
+<div class="dimension-row">
+<div class="dimension-label">T / F</div>
+<div class="dimension-bar">
+<div class="dimension-side-a t-side" style="width:38%">38%</div>
+<div class="dimension-side-b f-side" style="width:62%">62%</div>
+</div>
+<div class="dimension-percent">思考/情感</div>
+</div>
+<div class="dimension-row">
+<div class="dimension-label">J / P</div>
+<div class="dimension-bar">
+<div class="dimension-side-a j-side" style="width:25%">25%</div>
+<div class="dimension-side-b p-side" style="width:75%">75%</div>
+</div>
+<div class="dimension-percent">判断/感知</div>
+</div>
+</div>
+<div class="result-desc">
+<h3>性格特征</h3>
+<p>你是一个充满热情和创意的人。你对生活充满好奇，喜欢探索新事物。你善于发现别人的闪光点，和不同类型的人都能成为朋友。你的活力和乐观常常感染周围的人。</p>
+</div>
+<div class="result-traits">
+<h3>关键词</h3>
+<span class="trait-item">热情</span>
+<span class="trait-item">好奇</span>
+<span class="trait-item">有创意</span>
+<span class="trait-item">善于交际</span>
+<span class="trait-item">乐观</span>
+</div>
+<button class="btn btn-primary" onclick="showScreen('intro',document.querySelectorAll('.tab-btn')[0])">重新测评</button>
+</div>
+</div>
+<!-- 注释 -->
+<div class="annotation right" style="top:30px;right:-220px;">
+<span class="label">[C-01] 类型代号</span>
+48px / bold / #1a5276<br>16 型之一（此处示例 ENFP）<br>页面最大视觉焦点
+</div>
+<div class="annotation right" style="top:100px;right:-220px;">
+<span class="label">[C-02] 类型标签</span>
+16px / #888 / 居中<br>类型的中文别称（如"竞选者"）
+</div>
+<div class="annotation right" style="top:170px;right:-220px;">
+<span class="label">[C-03] 维度条</span>
+双色条形：左侧 vs 右侧<br>百分比数值内嵌在条形内<br>8 种维度色，左右对比鲜明<br>宽度按百分比动态变化
+</div>
+<div class="annotation right" style="top:360px;right:-220px;">
+<span class="label">[C-04] 性格描述</span>
+背景 #f8f9fa / 圆角 10px<br>通俗易懂的中文描述<br>面向中学生语言风格
+</div>
+<div class="annotation right" style="top:480px;right:-220px;">
+<span class="label">[C-05] 关键词标签</span>
+胶囊形标签 / 5 个特征词<br>背景 #ebf5fb / 边框 #bee5f0
+</div>
+<div class="annotation right" style="top:580px;right:-220px;">
+<span class="label">[C-06] 重新测评</span>
+返回欢迎页重新开始<br>不保留上次结果
+</div>
+</div>
+
+<!-- ===== 流程总览页 ===== -->
+<div id="screen-flow" class="screen-container" style="max-width:800px;">
+<div class="device-frame" style="padding:40px 30px;">
+<h2 style="font-size:22px;color:#1a5276;margin-bottom:20px;text-align:center;">用户流程总览</h2>
+
+<!-- 流程图 -->
+<div style="display:flex;justify-content:center;align-items:flex-start;gap:0;margin:30px 0 40px;flex-wrap:wrap;">
+
+<div style="text-align:center;margin:0 8px;">
+<div style="width:80px;height:80px;border-radius:50%;background:#3498db;color:#fff;display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 8px;">1</div>
+<p style="font-size:13px;font-weight:bold;color:#333;">欢迎页</p>
+<p style="font-size:11px;color:#999;">阅读说明<br>点击开始</p>
+</div>
+
+<div style="font-size:24px;color:#ccc;padding-top:30px;">→</div>
+
+<div style="text-align:center;margin:0 8px;">
+<div style="width:80px;height:80px;border-radius:50%;background:#3498db;color:#fff;display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 8px;">2</div>
+<p style="font-size:13px;font-weight:bold;color:#333;">测评页</p>
+<p style="font-size:11px;color:#999;">逐题作答<br>32 题</p>
+</div>
+
+<div style="font-size:24px;color:#ccc;padding-top:30px;">→</div>
+
+<div style="text-align:center;margin:0 8px;">
+<div style="width:80px;height:80px;border-radius:50%;background:#27ae60;color:#fff;display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 8px;">3</div>
+<p style="font-size:13px;font-weight:bold;color:#333;">结果页</p>
+<p style="font-size:11px;color:#999;">查看类型<br>阅读描述</p>
+</div>
+
+<div style="font-size:24px;color:#ccc;padding-top:30px;">⤴</div>
+
+<div style="text-align:center;margin:0 8px;">
+<div style="width:80px;height:80px;border-radius:50%;border:2px dashed #95a5a6;color:#95a5a6;display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 8px;">↻</div>
+<p style="font-size:13px;font-weight:bold;color:#95a5a6;">重新测评</p>
+<p style="font-size:11px;color:#999;">返回欢迎页<br>重新开始</p>
+</div>
+</div>
+
+<!-- 页面状态说明 -->
+<table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:20px;">
+<tr style="background:#1a5276;color:#fff;">
+<th style="padding:10px;text-align:left;">页面</th>
+<th style="padding:10px;text-align:left;">入口</th>
+<th style="padding:10px;text-align:left;">出口</th>
+<th style="padding:10px;text-align:left;">关键组件</th>
+</tr>
+<tr style="border-bottom:1px solid #e0e0e0;">
+<td style="padding:10px;">欢迎页</td>
+<td style="padding:10px;">程序启动</td>
+<td style="padding:10px;">点击"开始测评"</td>
+<td style="padding:10px;">标题 / 说明卡片 / CTA 按钮</td>
+</tr>
+<tr style="border-bottom:1px solid #e0e0e0;background:#fafbfc;">
+<td style="padding:10px;">测评页</td>
+<td style="padding:10px;">欢迎页跳入</td>
+<td style="padding:10px;">完成第 32 题</td>
+<td style="padding:10px;">进度条 / 题目 / 选项 A·B</td>
+</tr>
+<tr style="border-bottom:1px solid #e0e0e0;">
+<td style="padding:10px;">结果页</td>
+<td style="padding:10px;">测评完成</td>
+<td style="padding:10px;">点击"重新测评"</td>
+<td style="padding:10px;">类型代号 / 维度条 / 描述 / 标签</td>
+</tr>
+</table>
+
+<!-- 设计规格 -->
+<div class="spec-panel">
+<h4>设计规格速查</h4>
+<table style="width:100%;font-size:12px;color:#a0b0c0;">
+<tr><td style="padding:4px 0;width:30%;">主品牌色</td><td><code>#3498db</code>（按钮 / 进度条 / 选中态）</td></tr>
+<tr><td style="padding:4px 0;">标题色</td><td><code>#1a5276</code>（页面标题 / 类型代号）</td></tr>
+<tr><td style="padding:4px 0;">正文字色</td><td><code>#555 / #666</code>（正文 / 描述）</td></tr>
+<tr><td style="padding:4px 0;">背景色</td><td><code>#fff</code>（卡片）<code>#f8f9fa</code>（信息区）<code>#eef0f4</code>（页面底）</td></tr>
+<tr><td style="padding:4px 0;">圆角</td><td>8px（按钮）10px（卡片/信息区）15px（维度条）</td></tr>
+<tr><td style="padding:4px 0;">字号</td><td>48px（类型代号）28px（主标题）18px（题目）15px（正文）13px（标注）</td></tr>
+<tr><td style="padding:4px 0;">维度配色</td><td>E橙 I蓝 S绿 N紫 T红 F粉 J金 P青</td></tr>
+<tr><td style="padding:4px 0;">容器宽度</td><td>600px max-width / 居中</td></tr>
+<tr><td style="padding:4px 0;">字体</td><td>Microsoft YaHei / PingFang SC / 系统默认</td></tr>
+</table>
+</div>
+
+</div>
+</div>
+
+</div>
+
+<script>
+// ==================== 屏幕切换 ====================
+function showScreen(name, tabBtn) {
+  // 隐藏所有屏幕
+  var screens = document.querySelectorAll('.screen-container');
+  for (var i = 0; i < screens.length; i++) {
+    screens[i].classList.remove('active');
+  }
+  // 显示目标屏幕
+  document.getElementById('screen-' + name).classList.add('active');
+
+  // 切换 tab 高亮
+  if (tabBtn) {
+    var tabs = document.querySelectorAll('.tab-btn');
+    for (var j = 0; j < tabs.length; j++) {
+      tabs[j].classList.remove('active');
+    }
+    tabBtn.classList.add('active');
+  }
+}
+
+// ==================== 测评页原型交互 ====================
+var protoQuestions = [
+  {text:"课间休息时，你更倾向于：",a:"A. 去走廊和同学聊天，觉得和人交流很放松",b:"B. 自己在座位上安静待着，或者看看书"},
+  {text:"参加一个聚会时，你通常会：",a:"A. 主动认识新朋友，和不同的人聊天",b:"B. 待在熟悉的人旁边，不太主动找陌生人说话"},
+  {text:"看一本小说或看电影时，你更关注：",a:"A. 故事的情节是否合理、人物具体做了什么事",b:"B. 故事背后的含义、象征和可能性"},
+  {text:"朋友来找你诉苦说被欺负了，你第一反应是：",a:"A. 帮他分析事情的前因后果，想一个解决办法",b:"B. 先安慰他的情绪，让他知道你在乎他的感受"},
+  {text:"对于暑假作业，你的习惯是：",a:"A. 一放假就做好计划，尽早完成",b:"B. 最后几天才开始赶工，不到deadline不想做"}
+];
+var protoCurrentQ = 0;
+
+function protoSelect(btn, val) {
+  // 高亮选中
+  var allBtns = document.querySelectorAll('#proto-options .option-btn');
+  for (var i = 0; i < allBtns.length; i++) {
+    allBtns[i].classList.remove('selected');
+  }
+  btn.classList.add('selected');
+
+  // 延迟跳转
+  setTimeout(function() {
+    protoCurrentQ++;
+    if (protoCurrentQ < protoQuestions.length) {
+      renderProtoQuestion();
+    } else {
+      // 跳到结果页
+      showScreen('result', document.querySelectorAll('.tab-btn')[2]);
+    }
+  }, 300);
+}
+
+function renderProtoQuestion() {
+  var q = protoQuestions[protoCurrentQ];
+  var pct = (protoCurrentQ / 32) * 100;
+  document.getElementById('proto-progress-text').textContent = '第 ' + (protoCurrentQ + 1) + ' 题 / 共 32 题';
+  document.getElementById('proto-progress-fill').style.width = pct + '%';
+  document.getElementById('proto-question-text').textContent = q.text;
+
+  var container = document.getElementById('proto-options');
+  container.innerHTML = '';
+  var btnA = document.createElement('button');
+  btnA.className = 'option-btn';
+  btnA.textContent = q.a;
+  btnA.onclick = function() { protoSelect(this, 'A'); };
+  container.appendChild(btnA);
+
+  var btnB = document.createElement('button');
+  btnB.className = 'option-btn';
+  btnB.textContent = q.b;
+  btnB.onclick = function() { protoSelect(this, 'B'); };
+  container.appendChild(btnB);
+}
+
+// 重置原型测评（切到测评页时从头开始）
+function resetProtoQuiz() {
+  protoCurrentQ = 0;
+  renderProtoQuestion();
+}
+
+// 监听 tab 切换，切到测评页时重置
+var origShowScreen = showScreen;
+</script>
+
+</body>
+</html>
