@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MBTI 性格测评</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:"Microsoft YaHei","PingFang SC","Helvetica Neue",Arial,sans-serif;background:#f0f2f5;color:#333;line-height:1.6;}
+.container{max-width:600px;margin:40px auto;padding:20px;}
+.card{background:#fff;border-radius:12px;box-shadow:0 2px 12px rgba(0,0,0,0.08);padding:40px 35px;}
+h1{font-size:28px;text-align:center;color:#1a5276;margin-bottom:10px;}
+.subtitle{text-align:center;color:#888;font-size:14px;margin-bottom:30px;}
+.btn{display:block;width:100%;padding:14px;border:none;border-radius:8px;font-size:16px;cursor:pointer;transition:all 0.2s;}
+.btn-primary{background:#3498db;color:#fff;}
+.btn-primary:hover{background:#2980b9;}
+.btn-secondary{background:#95a5a6;color:#fff;margin-top:12px;}
+.btn-secondary:hover{background:#7f8c8d;}
+.option-btn{display:block;width:100%;text-align:left;background:#f8f9fa;border:2px solid #e8e8e8;border-radius:10px;padding:18px 22px;margin-bottom:14px;font-size:15px;color:#444;cursor:pointer;transition:all 0.15s;line-height:1.5;}
+.option-btn:hover{border-color:#3498db;background:#ebf5fb;}
+.option-btn:active{background:#d4eef9;}
+.option-btn.selected{border-color:#2980b9;background:#d4eef9;}
+.progress-bar{width:100%;height:6px;background:#e8e8e8;border-radius:3px;margin-bottom:25px;overflow:hidden;}
+.progress-fill{height:100%;background:#3498db;border-radius:3px;transition:width 0.3s;}
+.progress-text{font-size:13px;color:#999;text-align:center;margin-bottom:8px;}
+.question-text{font-size:18px;font-weight:bold;margin-bottom:25px;color:#2c3e50;line-height:1.5;}
+.hidden{display:none;}
+.result-type{font-size:48px;font-weight:bold;text-align:center;color:#1a5276;margin:10px 0 5px;}
+.result-label{font-size:16px;text-align:center;color:#888;margin-bottom:25px;}
+.result-dimensions{margin-bottom:30px;}
+.dimension-row{display:flex;align-items:center;margin-bottom:18px;}
+.dimension-label{width:80px;font-size:15px;font-weight:bold;color:#555;text-align:center;}
+.dimension-bar{flex:1;height:30px;background:#ecf0f1;border-radius:15px;overflow:hidden;display:flex;position:relative;}
+.dimension-side-a{height:100%;display:flex;align-items:center;justify-content:center;font-size:13px;color:#fff;font-weight:bold;transition:width 0.8s ease;}
+.dimension-side-b{height:100%;display:flex;align-items:center;justify-content:center;font-size:13px;color:#fff;font-weight:bold;transition:width 0.8s ease;}
+.dimension-percent{width:60px;font-size:14px;text-align:center;color:#666;}
+.e-side{background:#e67e22;}
+.i-side{background:#3498db;}
+.s-side{background:#27ae60;}
+.n-side{background:#8e44ad;}
+.t-side{background:#c0392b;}
+.f-side{background:#e84393;}
+.j-side{background:#d4a017;}
+.p-side{background:#16a085;}
+.result-desc{background:#f8f9fa;border-radius:10px;padding:25px;margin-bottom:20px;}
+.result-desc h3{font-size:16px;color:#1a5276;margin-bottom:12px;}
+.result-desc p{font-size:14px;color:#555;line-height:1.8;}
+.result-traits{margin-bottom:20px;}
+.result-traits h3{font-size:16px;color:#1a5276;margin-bottom:12px;}
+.trait-item{display:inline-block;background:#ebf5fb;border:1px solid #bee5f0;border-radius:20px;padding:6px 16px;margin:4px;font-size:13px;color:#2980b9;}
+.intro-text{font-size:15px;color:#666;line-height:1.8;margin-bottom:25px;text-align:justify;}
+.intro-info{background:#f8f9fa;border-radius:10px;padding:20px;margin-bottom:25px;}
+.intro-info p{font-size:13px;color:#888;line-height:1.7;}
+</style>
+</head>
+<body>
+<div class="container">
+<div class="card">
+
+<!-- 欢迎页 -->
+<div id="page-intro">
+<h1>MBTI 性格测评</h1>
+<p class="subtitle">发现你的性格类型</p>
+<p class="intro-text">
+你好！欢迎参加 MBTI 性格测评。MBTI 全称"迈尔斯-布里格斯类型指标"，通过四个维度来描述人的性格偏好。这个测评没有"对"与"错"的答案，请根据你<strong>最真实的自己</strong>来选择，而不是选择"你觉得应该怎样"。
+</p>
+<div class="intro-info">
+<p><strong>测评说明：</strong></p>
+<p>共 32 道题目，大约需要 10-15 分钟。每道题有两个选项，请选择更符合你平时状态的描述。根据第一直觉选择即可，不需要过多思考。</p>
+<p style="margin-top:8px;"><strong>四个维度：</strong></p>
+<p>E（外向）/ I（内向）—— 你从哪里获取能量</p>
+<p>S（感觉）/ N（直觉）—— 你如何获取信息</p>
+<p>T（思考）/ F（情感）—— 你如何做决定</p>
+<p>J（判断）/ P（感知）—— 你如何安排生活</p>
+</div>
+<button class="btn btn-primary" onclick="startQuiz()">开始测评</button>
+</div>
+
+<!-- 测评页 -->
+<div id="page-quiz" class="hidden">
+<div id="progress-text" class="progress-text">第 1 题 / 共 32 题</div>
+<div class="progress-bar"><div id="progress-fill" class="progress-fill" style="width:0%"></div></div>
+<p id="question-text" class="question-text"></p>
+<div id="options-container"></div>
+</div>
+
+<!-- 结果页 -->
+<div id="page-result" class="hidden">
+<p class="result-label">你的性格类型是</p>
+<div id="result-type" class="result-type"></div>
+<div id="result-label" class="result-label"></div>
+<div id="result-dimensions" class="result-dimensions"></div>
+<div id="result-desc" class="result-desc"></div>
+<div id="result-traits" class="result-traits"></div>
+<button class="btn btn-primary" onclick="restart()">重新测评</button>
+</div>
+
+</div>
+</div>
+
+<script>
+// ===================== 题目数据 =====================
+// 每题: { text, dim (维度), a (选项A), b (选项B), aVal (A对应字母), bVal (B对应字母) }
+var questions = [
+// --- E/I 维度 (8题) ---
+{text:"课间休息时，你更倾向于：",dim:"EI",a:"去走廊和同学聊天，觉得和人交流很放松",b:"自己在座位上安静待着，或者看看书",aVal:"E",bVal:"I"},
+{text:"参加一个聚会时，你通常会：",dim:"EI",a:"主动认识新朋友，和不同的人聊天",b:"待在熟悉的人旁边，不太主动找陌生人说话",aVal:"E",bVal:"I"},
+{text:"当你需要充电恢复精力时，你会：",dim:"EI",a:"找朋友一起做点什么事，和别人在一起更有活力",b:"一个人独处，做自己喜欢的事情来放松",aVal:"E",bVal:"I"},
+{text:"在小组讨论中，你的表现通常是：",dim:"EI",a:"比较积极发言，想到什么就说出来",b:"先听别人讲，想好了再说，有时候宁可在心里想",aVal:"E",bVal:"I"},
+{text:"周末没有作业的时候，你更喜欢：",dim:"EI",a:"约几个朋友出去玩",b:"一个人在家看看书、玩游戏或做自己的事",aVal:"E",bVal:"I"},
+{text:"你被人形容得最多的词是：",dim:"EI",a:"活泼、开朗、热情",b:"安静、沉稳、内敛",aVal:"E",bVal:"I"},
+{text:"到了一个新环境（比如新学期分班），你会：",dim:"EI",a:"很快开始和周围的人说话，适应得比较快",b:"先观察一阵子，等别人主动来找你或者你觉得安全了再开口",aVal:"E",bVal:"I"},
+{text:"你觉得哪种情况更让你觉得累：",dim:"EI",a:"一个人待太久，没有人和你说话",b:"人太多太吵，没有自己的安静时间",aVal:"E",bVal:"I"},
+// --- S/N 维度 (8题) ---
+{text:"看一本小说或看电影时，你更关注：",dim:"SN",a:"故事的情节是否合理、人物具体做了什么事",b:"故事背后的含义、象征和可能性",aVal:"S",bVal:"N"},
+{text:"老师讲一个新知识时，你更喜欢老师：",dim:"SN",a:"一步步讲解具体的操作方法和例题",b:"先讲这个知识的整体框架和和未来可能的应用",aVal:"S",bVal:"N"},
+{text:"你更擅长记住的是：",dim:"SN",a:"具体的事实、数据、细节",b:"整体印象、概念、事物之间的关联",aVal:"S",bVal:"N"},
+{text:"面对一个新任务，你通常会：",dim:"SN",a:"先看看有没有现成的方法和步骤可以参照",b:"先想想能不能用一种全新的方式来搞定",aVal:"S",bVal:"N"},
+{text:"你更欣赏哪种思维方式：",dim:"SN",a:"脚踏实地，关注眼前可以验证的事情",b:"天马行空，关注未来的可能性和创意",aVal:"S",bVal:"N"},
+{text:"描述一件事时，你更倾向于：",dim:"SN",a:"按实际发生的顺序详细说清楚每一步",b:"讲这件事说明了什么问题，有什么意义",aVal:"S",bVal:"N"},
+{text:"你更喜欢哪种类型的题目：",dim:"SN",a:"有明确标准答案的计算或填空题",b:"可以自由发挥、没有唯一答案的开放性题目",aVal:"S",bVal:"N"},
+{text:"当你听到一个新点子时，你的第一反应是：",dim:"SN",a:"这个点子具体怎么做？有没有可操作性？",b:"这个点子还能延伸出什么？如果结合别的东西会怎样？",aVal:"S",bVal:"N"},
+// --- T/F 维度 (8题) ---
+{text:"朋友来找你诉苦说被欺负了，你第一反应是：",dim:"TF",a:"帮他分析事情的前因后果，想一个解决办法",b:"先安慰他的情绪，让他知道你在乎他的感受",aVal:"T",bVal:"F"},
+{text:"你和同学意见不一致时，你更倾向于：",dim:"TF",a:"摆事实讲道理，谁有理就听谁的",b:"尽量照顾双方感受，维护关系比输赢更重要",aVal:"T",bVal:"F"},
+{text:"你觉得做决定时，更重要的是：",dim:"TF",a:"客观分析利弊，选择逻辑上最优的方案",b:"考虑这件事对相关的人会产生什么感受",aVal:"T",bVal:"F"},
+{text:"你觉得哪种批评更让你难以接受：",dim:"TF",a:"批评没有道理，逻辑不通",b:"批评的语气太冷漠，不考虑别人的感受",aVal:"T",bVal:"F"},
+{text:"班里要选一个活动方案，你会投票给：",dim:"TF",a:"效率最高、效果最好的那个方案",b:"大家都比较开心、照顾到多数人感受的方案",aVal:"T",bVal:"F"},
+{text:"你更看重一个人身上的什么品质：",dim:"TF",a:"理性、公正、有能力",b:"善良、有同理心、会关心人",aVal:"T",bVal:"F"},
+{text:"当你看到别人有困难时，你通常会：",dim:"TF",a:"想想他遇到了什么问题、怎么帮他解决",b:"先体会他的心情，觉得他一定很难受",aVal:"T",bVal:"F"},
+{text:"你觉得公平意味着什么：",dim:"TF",a:"按规则和标准来，对所有人一视同仁",b:"根据每个人的实际情况和需要来灵活对待",aVal:"T",bVal:"F"},
+// --- J/P 维度 (8题) ---
+{text:"对于暑假作业，你的习惯是：",dim:"JP",a:"一放假就做好计划，尽早完成",b:"最后几天才开始赶工，不到deadline不想做",aVal:"J",bVal:"P"},
+{text:"你的书桌或房间通常是：",dim:"JP",a:"比较整齐，东西有固定的位置",b:"有点乱，但我知道东西在哪，也还过得去",aVal:"J",bVal:"P"},
+{text:"出门旅行前，你会：",dim:"JP",a:"提前做好攻略和行程安排，尽量按计划走",b:"大致定个方向就好，到了那里再说，喜欢随机应变",aVal:"J",bVal:"P"},
+{text:"面对一个长期任务（比如学期项目），你会：",dim:"JP",a:"制定时间表，按阶段推进",b:"什么时候有灵感什么时候做，不太喜欢被计划绑住",aVal:"J",bVal:"P"},
+{text:"你更喜欢哪种生活节奏：",dim:"JP",a:"有条理、有计划、事情都在掌控中",b:"灵活自由、充满变化、有选择的余地",aVal:"J",bVal:"P"},
+{text:"当计划突然改变时，你通常会：",dim:"JP",a:"有点不适应，需要重新理一下思路",b:"觉得还好，甚至可能觉得有意思",aVal:"J",bVal:"P"},
+{text:"买东西时，你更倾向于：",dim:"JP",a:"想好了要什么，直接去买了就走",b:"到处看看，可能看到更好的就改主意了",aVal:"J",bVal:"P"},
+{text:"你觉得哪种情况更让你不舒服：",dim:"JP",a:"事情没有定论，悬而未决",b:"一切都定死了，没有调整的余地",aVal:"J",bVal:"P"}
+];
+
+// ===================== 16型人格描述 =====================
+var personalityTypes = {
+"INTJ":{label:"建筑师",desc:"你是一个富有战略思维的人。你喜欢在头脑中构建系统和计划，做事有条理，目标明确。你擅长独立思考，对知识和能力有很高的追求。在团队中，你常常是那个看到长远方向的人。",traits:["战略思维","独立","理性","目标导向","追求卓越"]},
+"INTP":{label:"逻辑学家",desc:"你是一个充满好奇心和探索精神的人。你喜欢分析问题，探索事物的原理和规律。你的思维灵活，喜欢从不同角度看问题。你可能不太在意社交规则，但你的想法常常让同学们眼前一亮。",traits:["好奇心强","善于分析","灵活","理性","创新"]},
+"ENTJ":{label:"指挥官",desc:"你是一个天生的领导者。你做事果断，有很强的组织能力，喜欢带领大家一起完成目标。你不怕面对挑战，遇到问题时会主动寻找解决方案。在班级活动中，你常常是那个站出来统筹全局的人。",traits:["果断","领导力","高效","自信","战略眼光"]},
+"ENTP":{label:"辩论家",desc:"你是一个充满创意和活力的人。你喜欢探索新的可能性，不怕挑战传统观点。你的思维敏捷，擅长发现别人忽略的角度。在讨论中，你常能提出令人耳目一新的想法，让课堂变得更有趣。",traits:["创意","思维敏捷","好奇","灵活","善于辩论"]},
+"INFJ":{label:"提倡者",desc:"你是一个安静但内心丰富的人。你对别人的情感很敏感，有很强的同理心。你做事有计划，但驱动力是内心的价值观。你可能朋友不多，但关系很深。你常常是同学们倾诉心事的对象。",traits:["理想主义","同理心","深思熟虑","有计划","关注他人"]},
+"INFP":{label:"调停者",desc:"你是一个温柔而理想主义的人。你很在乎内心的真实感受，追求有意义的事情。你有创造力，喜欢用文字、音乐或绘画表达自己。你可能外表安静，但内心有一个丰富多彩的世界。",traits:["理想主义","有创造力","敏感","真诚","追求意义"]},
+"ENFJ":{label:"主人公",desc:"你是一个热情而有感染力的人。你善于理解他人的需求，喜欢帮助别人成长。你在班级里常扮演润滑剂的角色，让不同的人能够和谐相处。你有很强的责任感，愿意为集体付出。",traits:["热情","有同理心","有感染力","负责","善于沟通"]},
+"ENFP":{label:"竞选者",desc:"你是一个充满热情和创意的人。你对生活充满好奇，喜欢探索新事物。你善于发现别人的闪光点，和不同类型的人都能成为朋友。你的活力和乐观常常感染周围的人。",traits:["热情","好奇","有创意","善于交际","乐观"]},
+"ISTJ":{label:"物流师",desc:"你是一个踏实而可靠的人。你做事认真负责，遵守规则，重视事实和细节。你不会轻易承诺，但一旦答应了就会尽力完成。老师和同学都觉得你是一个值得信赖的人。",traits:["踏实","可靠","有条理","负责任","重视事实"]},
+"ISFJ":{label:"守卫者",desc:"你是一个温和而体贴的人。你默默关心身边的人，愿意为别人提供帮助。你做事细致，有很强的责任心。你可能不喜欢站在聚光灯下，但你是班级里不可或缺的幕后英雄。",traits:["温和","体贴","细心","有责任心","乐于助人"]},
+"ESTJ":{label:"总经理",desc:"你是一个务实而有执行力的人。你做事有条理，重视效率和结果。你擅长组织和管理，喜欢把事情安排得井井有条。在班级活动中，你能把任务分配清楚，让事情顺利推进。",traits:["务实","高效","有组织力","果断","有执行力"]},
+"ESFJ":{label:"执政官",desc:"你是一个热心而善于照顾他人的人。你重视和谐的氛围，喜欢维护班级的凝聚力。你做事有条理，也很关注别人的需求。你常常是班级活动的积极组织者和参与者。",traits:["热心","有组织","善于社交","有同理心","重视和谐"]},
+"ISTP":{label:"鉴赏家",desc:"你是一个冷静而善于动手的人。你喜欢探索事物的运作方式，擅长解决实际问题。你不太喜欢空谈，更愿意用行动来证明。你适应能力强，遇到突发状况时能保持冷静。",traits:["冷静","善于动手","灵活","务实","适应力强"]},
+"ISFP":{label:"探险家",desc:"你是一个安静而有艺术气质的人。你有自己独特的审美和价值观，不喜欢被框框架架束缚。你善良温柔，但内心有坚定的信念。你用自己独特的方式感受和表达这个世界。",traits:["有艺术气质","温柔","自由","有审美","忠于内心"]},
+"ESTP":{label:"企业家",desc:"你是一个充满活力且行动力很强的人。你喜欢直接体验，不怕冒险。你反应快，善于在行动中找到解决办法。你在课堂和活动中常常是那个第一个试试看的人。",traits:["活力","行动力","勇敢","善于应变","直接"]},
+"ESFP":{label:"表演者",desc:"你是一个热情而开朗的人。你善于享受当下，喜欢让周围的人也开心。你有很强的表现力，在班级活动中常常是焦点人物。你灵活变通，能把平淡的日子变得有趣。",traits:["热情","开朗","有表现力","灵活","享受当下"]}
+};
+
+// ===================== 全局状态 =====================
+var currentQuestion = 0;
+var answers = []; // 每个元素: "E"/"I"/"S"/"N"/"T"/"F"/"J"/"P"
+
+// ===================== 核心逻辑 =====================
+function startQuiz() {
+  currentQuestion = 0;
+  answers = [];
+  document.getElementById("page-intro").classList.add("hidden");
+  document.getElementById("page-result").classList.add("hidden");
+  document.getElementById("page-quiz").classList.remove("hidden");
+  renderQuestion();
+}
+
+function renderQuestion() {
+  var q = questions[currentQuestion];
+  var progressPct = (currentQuestion / questions.length) * 100;
+  document.getElementById("progress-text").textContent = "第 " + (currentQuestion + 1) + " 题 / 共 " + questions.length + " 题";
+  document.getElementById("progress-fill").style.width = progressPct + "%";
+  document.getElementById("question-text").textContent = q.text;
+
+  var container = document.getElementById("options-container");
+  container.innerHTML = "";
+  var btnA = document.createElement("button");
+  btnA.className = "option-btn";
+  btnA.textContent = "A. " + q.a;
+  btnA.onclick = function() { selectAnswer(q.aVal, this); };
+  container.appendChild(btnA);
+
+  var btnB = document.createElement("button");
+  btnB.className = "option-btn";
+  btnB.textContent = "B. " + q.b;
+  btnB.onclick = function() { selectAnswer(q.bVal, this); };
+  container.appendChild(btnB);
+}
+
+function selectAnswer(val, btn) {
+  // 高亮选中效果
+  var allBtns = document.querySelectorAll(".option-btn");
+  for (var i = 0; i < allBtns.length; i++) {
+    allBtns[i].classList.remove("selected");
+  }
+  btn.classList.add("selected");
+
+  // 延迟跳转，让用户看到选中效果
+  setTimeout(function() {
+    answers[currentQuestion] = val;
+    currentQuestion++;
+    if (currentQuestion < questions.length) {
+      renderQuestion();
+    } else {
+      showResult();
+    }
+  }, 200);
+}
+
+function calculateResult() {
+  var scores = { E:0, I:0, S:0, N:0, T:0, F:0, J:0, P:0 };
+  for (var i = 0; i < answers.length; i++) {
+    scores[answers[i]]++;
+  }
+  // 每个维度的确定
+  var type = "";
+  type += (scores.E >= scores.I) ? "E" : "I";
+  type += (scores.S >= scores.N) ? "S" : "N";
+  type += (scores.T >= scores.F) ? "T" : "F";
+  type += (scores.J >= scores.P) ? "J" : "P";
+
+  // 各维度百分比
+  var dims = {};
+  var eiTotal = scores.E + scores.I;
+  var snTotal = scores.S + scores.N;
+  var tfTotal = scores.T + scores.F;
+  var jpTotal = scores.J + scores.P;
+  dims.EI = { E: Math.round(scores.E / eiTotal * 100), I: Math.round(scores.I / eiTotal * 100) };
+  dims.SN = { S: Math.round(scores.S / snTotal * 100), N: Math.round(scores.N / snTotal * 100) };
+  dims.TF = { T: Math.round(scores.T / tfTotal * 100), F: Math.round(scores.F / tfTotal * 100) };
+  dims.JP = { J: Math.round(scores.J / jpTotal * 100), P: Math.round(scores.P / jpTotal * 100) };
+
+  return { type: type, dims: dims };
+}
+
+function showResult() {
+  document.getElementById("page-quiz").classList.add("hidden");
+  document.getElementById("page-result").classList.remove("hidden");
+
+  var result = calculateResult();
+  var pt = personalityTypes[result.type];
+
+  document.getElementById("result-type").textContent = result.type;
+  document.getElementById("result-label").textContent = pt.label;
+
+  // 维度展示
+  var dimsContainer = document.getElementById("result-dimensions");
+  dimsContainer.innerHTML = "";
+  var dimConfigs = [
+    { key: "EI", left: "E", right: "I", leftLabel: "外向", rightLabel: "内向", leftCls: "e-side", rightCls: "i-side" },
+    { key: "SN", left: "S", right: "N", leftLabel: "感觉", rightLabel: "直觉", leftCls: "s-side", rightCls: "n-side" },
+    { key: "TF", left: "T", right: "F", leftLabel: "思考", rightLabel: "情感", leftCls: "t-side", rightCls: "f-side" },
+    { key: "JP", left: "J", right: "P", leftLabel: "判断", rightLabel: "感知", leftCls: "j-side", rightCls: "p-side" }
+  ];
+
+  for (var i = 0; i < dimConfigs.length; i++) {
+    var cfg = dimConfigs[i];
+    var d = result.dims[cfg.key];
+    var row = document.createElement("div");
+    row.className = "dimension-row";
+
+    var label = document.createElement("div");
+    label.className = "dimension-label";
+    label.textContent = cfg.left + " / " + cfg.right;
+    row.appendChild(label);
+
+    var bar = document.createElement("div");
+    bar.className = "dimension-bar";
+
+    var sideA = document.createElement("div");
+    sideA.className = cfg.leftCls;
+    sideA.style.width = d[cfg.left] + "%";
+    sideA.textContent = d[cfg.left] + "%";
+    bar.appendChild(sideA);
+
+    var sideB = document.createElement("div");
+    sideB.className = cfg.rightCls;
+    sideB.style.width = d[cfg.right] + "%";
+    sideB.textContent = d[cfg.right] + "%";
+    bar.appendChild(sideB);
+
+    row.appendChild(bar);
+
+    var pct = document.createElement("div");
+    pct.className = "dimension-percent";
+    pct.textContent = cfg.leftLabel + "/" + cfg.rightLabel;
+    row.appendChild(pct);
+
+    dimsContainer.appendChild(row);
+  }
+
+  // 性格描述
+  var descContainer = document.getElementById("result-desc");
+  descContainer.innerHTML = "<h3>性格特征</h3><p>" + pt.desc + "</p>";
+
+  // 特点标签
+  var traitsContainer = document.getElementById("result-traits");
+  var traitsHtml = "<h3>关键词</h3>";
+  for (var j = 0; j < pt.traits.length; j++) {
+    traitsHtml += '<span class="trait-item">' + pt.traits[j] + '</span>';
+  }
+  traitsContainer.innerHTML = traitsHtml;
+}
+
+function restart() {
+  document.getElementById("page-result").classList.add("hidden");
+  document.getElementById("page-intro").classList.remove("hidden");
+}
+</script>
+</body>
+</html>
